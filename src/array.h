@@ -161,6 +161,20 @@ class Array2
         }
     }
 
+    void multiply(const Array2<T> & rhs)
+    {
+        for (size_t i = 0; i < _data.size(); ++i) {
+                _data[i] *= rhs._data[i];
+        }
+    }
+
+    void multiply(T  rhs)
+    {
+        for (size_t i = 0; i < _data.size(); ++i) {
+            _data[i] *= rhs;
+        }
+    }
+    
     void divide(const Array2<T> & rhs)
     {
         for (size_t i = 0; i < _data.size(); ++i) {
@@ -212,6 +226,8 @@ class Array2
 
     size_t _idx(size_t i, size_t j) const
     {
+        assert(i < _nx);
+        assert(j < _ny);
         return j + _ny * i;
     }
 };
@@ -264,9 +280,6 @@ class FaceArray2 : public Array2<T>
     template<Faces T_FACE>
     T & face(size_t i, size_t j)
     {
-        assert(i < Array2<T>::_nx - 1 * T_DIMX);
-        assert(j < Array2<T>::_ny - 1 * T_DIMY);
-        
         if (T_FACE == LEFT ||
             T_FACE == BOTTOM) {
             return _data[_idx(i,j)];
@@ -278,10 +291,7 @@ class FaceArray2 : public Array2<T>
     
     template<Faces T_FACE>
     T face(size_t i, size_t j) const
-    {
-        assert(i < Array2<T>::_nx - 1 * T_DIMX);
-        assert(j < Array2<T>::_ny - 1 * T_DIMY);
-        
+    {        
         if (T_FACE == LEFT ||
             T_FACE == BOTTOM) {
             return _data[_idx(i,j)];
@@ -293,11 +303,6 @@ class FaceArray2 : public Array2<T>
 
     T center(size_t i, size_t j) const
     {
-        assert(i < Array2<T>::_nx - 1 * T_DIMX);
-        assert(j < Array2<T>::_ny - 1 * T_DIMY);
-        
-        
-        
         return 0.5*(_data[_idx(i,j)] +
                     _data[_idx(i+T_DIMX,j+T_DIMY)]);
         

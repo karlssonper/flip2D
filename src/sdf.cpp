@@ -2,14 +2,9 @@
 #include <cassert>
 #include <cmath>
 
-SolidSDF::SolidSDF()
+SolidSDF::SolidSDF(Settings::Ptr s)
 {
-    
-}
-
-SolidSDF::SolidSDF(int nx, int ny, float dx)
-{
-    _phi.resize(nx,ny,dx);
+    _phi.resize(s->nx,s->ny,s->dx);
 }
 
 void SolidSDF::createWeights(FaceArray2Xf & uw, FaceArray2Yf & vw)
@@ -55,15 +50,11 @@ void SolidSDF::initBoxBoundary(int width)
     }
 }
 
-FluidSDF::FluidSDF()
+FluidSDF::FluidSDF(Settings::Ptr s)
 {
-}
-
-FluidSDF::FluidSDF(int nx, int ny, float dx)
-{
-    _phi.resize(nx,ny,dx);
-    _sum.resize(nx,ny,dx);
-    _pAvg.resize(nx,ny,dx);
+    _phi.resize(s->nx,s->ny,s->dx);
+    _sum.resize(s->nx,s->ny,s->dx);
+    _pAvg.resize(s->nx,s->ny,s->dx);
 }
 
 void FluidSDF::reconstructSurface(Particles::Ptr particles, float R, float r)

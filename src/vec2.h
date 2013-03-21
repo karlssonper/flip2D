@@ -62,6 +62,18 @@ class Vec2
         x*= rhs;
         y*= rhs;
     }
+
+    Vec2<T> operator/(T rhs) const
+    {
+        return Vec2<T>(x / rhs, y / rhs);
+    }
+    
+    
+    void operator/=(T rhs)
+    {
+        x/= rhs;
+        y/= rhs;
+    }
     
   protected:
 };

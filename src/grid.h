@@ -10,7 +10,7 @@ class Grid : public SmartPtrInterface<Grid>
   public:
     typedef SmartPtr<Grid> Ptr;
 
-    static Ptr create(int nx, int ny, float dx) { return new Grid(nx,ny,dx); }
+    static Ptr create(Settings::Ptr s) { return new Grid(s); }
 
     void sampleVelocities(Particles::Ptr p);
 
@@ -19,6 +19,15 @@ class Grid : public SmartPtrInterface<Grid>
     float CFL() const;
 
     void extrapolateVelocities(FluidSDF::Ptr f, int numSweepIterations);
+
+    void pressureProjection(const Array2f &pressure, FluidSDF::Ptr f, float dt);
+
+    void enforceBoundaryConditions(SolidSDF::Ptr s);
+    
+    const FaceArray2Xf & u() const { return _u;}
+    const FaceArray2Xf & uWeights() const { return _uWeights;}
+    const FaceArray2Yf & v() const { return _v;}
+    const FaceArray2Yf & vWeigts() const { return _vWeights;}
     
   protected:
     FaceArray2Xf _u;
@@ -29,10 +38,13 @@ class Grid : public SmartPtrInterface<Grid>
     FaceArray2Yf _vSum;    
     FaceArray2Yf _vWeights;
     
-    Grid(int nx, int ny, float dx);
+    Grid(Settings::Ptr s);
     Grid();
     Grid(const Grid &);
     void operator=(const Grid&);
+
+    template<Faces T_FACE, bool T_U>
+    void _sweep(FluidSDF::Ptr f, bool upsweepX, bool upsweepY);
 
     template <typename T_ARRAY>
     void _accumulate(T_ARRAY & array,
@@ -45,6 +57,22 @@ class Grid : public SmartPtrInterface<Grid>
                      float ty);
 
     void _reset();
+
+    bool _theta(float w, float phiA, float phiB, float & theta)
+    {
+        if (w > 0 && (phiA < 0 || phiB < 0)) {
+            theta = 1.0f;
+            if (phiA > 0 || phiB > 0) {
+                theta = SolidSDF::fractionInside(phiA,phiB);
+            }
+            if (theta < 0.01) {
+                theta = 0.01;
+            }
+            return true;
+        } else {
+            return false;
+        }
+    }
 };
 
 #endif

@@ -22,7 +22,11 @@ int test(bool cond, const char * msg)
 int main(int argc, char *argv[]) {
     std::cout << "Starting SDF test..." << std::endl;
 
-    SolidSDF::Ptr s = SolidSDF::create(30,30,1.0);
+    Settings::Ptr solidSettings = Settings::create();
+    solidSettings->nx = 30;
+    solidSettings->ny = 30;
+    solidSettings->dx = 1.0;
+    SolidSDF::Ptr s = SolidSDF::create(solidSettings);
     s->initBoxBoundary(2);
 
     int numFailed = 0;
@@ -56,7 +60,11 @@ int main(int argc, char *argv[]) {
     numFailed += test(v.face<TOP>(2,2) == 1, "weights");
 
     int res = 128;
-    FluidSDF::Ptr f = FluidSDF::create(res,res,1.0);
+    Settings::Ptr fluidSettings = Settings::create();
+    fluidSettings->nx = res;
+    fluidSettings->ny = res;
+    fluidSettings->dx = 1.0;
+    FluidSDF::Ptr f = FluidSDF::create(fluidSettings);
     Particles::Ptr p = Particles::create();
     Vec2f mid(res*0.5,res*0.5);
     float radius = 40;

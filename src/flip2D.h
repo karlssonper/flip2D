@@ -2,6 +2,7 @@
 #define FLIP2D_H_
 
 #include "ptr.h"
+#include "settings.h"
 #include "grid.h"
 
 class FLIP2D : public SmartPtrInterface<FLIP2D>
@@ -9,7 +10,10 @@ class FLIP2D : public SmartPtrInterface<FLIP2D>
   public:
     typedef SmartPtr<FLIP2D> Ptr;
     
-    static FLIP2D::Ptr create(int nx, int ny, float dx);
+    static FLIP2D::Ptr create(Settings::Ptr s)
+    {
+        return new FLIP2D(s);
+    }
 
     void step(float dt);
 
@@ -18,7 +22,7 @@ class FLIP2D : public SmartPtrInterface<FLIP2D>
   protected:
     Grid::Ptr _grid;
     
-    FLIP2D(int nx, int ny, float dx);
+    FLIP2D(Settings::Ptr s);
     FLIP2D();
     FLIP2D(const FLIP2D &);
     void operator=(const FLIP2D &);

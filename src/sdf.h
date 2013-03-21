@@ -2,21 +2,26 @@
 #define SDF_H_
 
 #include "ptr.h"
+#include "settings.h"
 #include "array.h"
 #include "particles.h"
 #include "util.h"
+
+template<typename T_ARRAY>
+Vec2f sdfGradient(const T_ARRAY &phi, float x, float y);
 
 class SolidSDF : public SmartPtrInterface<SolidSDF>
 {
   public:
     typedef SmartPtr<SolidSDF> Ptr;
 
-    static Ptr create(int nx, int ny, float dx)
-    {
-        return new SolidSDF(nx,ny,dx);
-    }
+    static Ptr create(Settings::Ptr s) {return new SolidSDF(s);}
 
     static float fractionInside(float phiA, float phiB);
+
+    Vec2f gradient(float x, float y) const { return sdfGradient(_phi, x, y); }
+
+    Vec2f gradient(const Vec2f & pos) const { return gradient(pos.x,pos.y); }
     
     void initBoxBoundary(int width);
 
@@ -27,8 +32,11 @@ class SolidSDF : public SmartPtrInterface<SolidSDF>
   protected:
     CornerArray2f _phi;
 
+    
+    SolidSDF(Settings::Ptr s);
     SolidSDF();
-    SolidSDF(int nx, int ny, float dx);
+    SolidSDF(const SolidSDF &);
+    void operator=(const SolidSDF &);
 
     float _weight(float phiA, float phiB) const
     {
@@ -41,10 +49,11 @@ class FluidSDF : public SmartPtrInterface<FluidSDF>
   public:
     typedef SmartPtr<FluidSDF> Ptr;
 
-    static Ptr create(int nx, int ny, float dx)
-    {
-        return new FluidSDF(nx,ny,dx);
-    }
+    static Ptr create(Settings::Ptr s) {return new FluidSDF(s);}
+            
+    Vec2f gradient(float x, float y) const { return sdfGradient(_phi, x, y); }
+
+    Vec2f gradient(const Vec2f & pos) const { return gradient(pos.x,pos.y); }
     
     bool isFluid(int i, int j) const { return _phi(i,j) < 0; }
 
@@ -62,8 +71,10 @@ class FluidSDF : public SmartPtrInterface<FluidSDF>
     Array2f _sum;
     Array2<Vec2f> _pAvg;
 
+    FluidSDF(Settings::Ptr s);
     FluidSDF();
-    FluidSDF(int nx, int ny, float dx);
+    FluidSDF(const FluidSDF &);
+    void operator=(const FluidSDF &);
 
     float _kernel(float s) const { return max(0.f,s*s*s*(1.0f-s*s)); }
     
@@ -94,6 +105,14 @@ inline float SolidSDF::fractionInside(float phiA, float phiB)
     } else {
         return 0;
     }
+}
+
+template<typename T_ARRAY>
+inline Vec2f sdfGradient(const T_ARRAY & phi, float x, float y)
+{
+    return Vec2f(phi(x+phi.dx(),y) - phi(x-phi.dx(),y),
+                 phi(x,y+phi.dx()) - phi(x,y-phi.dx())) / 2.f*phi.dx();
+                 
 }
 
 #endif

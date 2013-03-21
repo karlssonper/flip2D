@@ -7,18 +7,18 @@ template <typename T>
 class SparseLaplacianMatrix
 {
   public:
-    SparseLaplacianMatrix();
+    SparseLaplacianMatrix() {} ;
 
-    SparseLaplacianMatrix(size_t nx, size_t ny)
+    SparseLaplacianMatrix(size_t nx, size_t ny, float dx = 1.0f)
     {
-        resize(nx,ny);
+        resize(nx,ny,dx);
     }
 
-    void resize(size_t nx, size_t ny)
+    void resize(size_t nx, size_t ny, float dx = 1.0f)
     {
-        _Adiag.resize(nx,ny);
-        _Aplusi.resize(nx,ny);
-        _Aplusj.resize(nx,ny);
+        _Adiag.resize(nx,ny,dx);
+        _Aplusi.resize(nx,ny,dx);
+        _Aplusj.resize(nx,ny,dx);
     }
 
     void reset()
@@ -67,6 +67,13 @@ class SparseLaplacianMatrix
                 (i < input.nx()-1 ? value<RIGHT>(i,j) * input(i+1,j) : 0) +
                 (j > 0 ? value<BOTTOM>(i,j) * input(i,j-1) : 0) +
                 (j < input.ny()-1 ? value<TOP>(i,j)* input(i,j+1) : 0);
+    }
+
+    void multiply(T rhs)
+    {
+        _Adiag.multiply(rhs);
+        _Aplusi.multiply(rhs);
+        _Aplusj.multiply(rhs);
     }
   protected:
     Array2<T> _Adiag;

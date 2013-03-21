@@ -1,6 +1,6 @@
 PROJECT(FLIP2D_SRC)
 
-SET(SOURCE flip2D grid particles sdf)
+SET(SOURCE flip2D grid particles sdf pressure pcg multigrid)
 
 ADD_LIBRARY(flip2D SHARED ${SOURCE})
 
