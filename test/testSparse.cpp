@@ -34,7 +34,7 @@ int main(int argc, char *argv[]) {
     A.value<RIGHT>(0,0) = 3.0;
 
     Array2f x(3,3,1.0);
-    for(int i=0;i<3;++i) for(int j=0;j<3;++j) x(i,j) = 1.0;
+    x.set(1.0);
 
     int numFailed = 0;
 

@@ -47,12 +47,12 @@ class Vec2
         y += rhs.y;
     }
 
-    Vec2<T> operator-(const Vec2<T> & rhs)
+    Vec2<T> operator-(const Vec2<T> & rhs) const
     {
         return Vec2<T>(x - rhs.x, y - rhs.y);
     }
 
-    Vec2<T> operator*(T rhs)
+    Vec2<T> operator*(T rhs) const
     {
         return Vec2<T>(x * rhs, y * rhs);
     }

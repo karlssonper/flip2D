@@ -139,6 +139,7 @@ int main(int argc, char *argv[]) {
     numFailed += test(c.bilerp(2.0,2.0) == 9.0, "bilerp face");
     numFailed += test(c.bilerp(2.0,1.5) == (9+6)/2.0, "bilerp face");
     numFailed += test(c.bilerp(1.5,1.5) == (5+6+8+9)/4.0, "bilerp face");
+    numFailed += test(c.center(1,1) == (5+6+8+9)/4.0, "center");
     
     std::cout << "Number of failed tests: " << numFailed << std::endl;    
 }

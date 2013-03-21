@@ -35,20 +35,22 @@ class Array2
         return _data[_idx(i,j)];
     }
 
-    Vec2<float> pos(size_t i, size_t j) const
+    Vec2f pos(size_t i, size_t j) const
     {
         return _dx * Vec2<T>(i + 0.5, j + 0.5);
     }
-   
-    T bilerp(float x, float y) const
+
+    void bary(float x,
+              float y,
+              size_t & i,
+              size_t & j,
+              float & tx,
+              float & ty) const
     {
         // Scale from world coordinates to index coordinates
         x/= _dx;
         y/= _dx;
-        
-        size_t i,j;
-        float tx,ty;
-     
+
         if (x < 0.5) {
             i = 0;
             tx = 0;
@@ -70,7 +72,18 @@ class Array2
             j = floorf(y - 0.5);
             ty = y - 0.5 - j;
         }
-          
+    }
+
+    T bilerp(const Vec2f & pos) const
+    {
+        return bilerp(pos.x, pos.y);
+    }
+    
+    T bilerp(float x, float y) const
+    {
+        size_t i, j;
+        float tx, ty;
+        bary(x, y, i, j, tx, ty);
         return bilerp(i,j,tx,ty);
     }
 
@@ -89,10 +102,11 @@ class Array2
         }
     }
 
-    void resize(size_t nx, size_t ny)
+    void resize(size_t nx, size_t ny, float dx = 1.0)
     {
         _nx = nx;
         _ny = ny;
+        _dx = dx;
         _data.resize(_nx*_ny);
     }
 
@@ -119,6 +133,20 @@ class Array2
         return sum;
     }
 
+    void set(T value)
+    {
+        for (size_t i = 0; i < _data.size(); ++i) {
+            _data[i] = value;
+        }
+    }
+
+    void add(T t)
+    {
+        for (size_t i = 0; i < _data.size(); ++i) {
+            _data[i] += t;
+        }
+    }
+    
     void add(const Array2<T> & rhs, T scale = 1.0)
     {
         for (size_t i = 0; i < _data.size(); ++i) {
@@ -130,6 +158,15 @@ class Array2
     {
         for (size_t i = 0; i < _data.size(); ++i) {
             _data[i] = _data[i] * scale + addArray._data[i];
+        }
+    }
+
+    void divide(const Array2<T> & rhs)
+    {
+        for (size_t i = 0; i < _data.size(); ++i) {
+            if (rhs._data[i]) {
+                _data[i] /= rhs._data[i];
+            }
         }
     }
 
@@ -166,6 +203,7 @@ class Array2
     
     size_t nx() const { return _nx; }
     size_t ny() const { return _ny; }
+    float dx() const { return _dx; }
     
   protected:
     size_t _nx, _ny;
@@ -196,6 +234,7 @@ template <typename T, size_t T_DIMX, size_t T_DIMY>
 class FaceArray2 : public Array2<T>
 {
   public:
+    FaceArray2() {}
     FaceArray2(size_t nx, size_t ny, float dx) :
             Array2<T>(nx + T_DIMX, ny + T_DIMY, dx)
     {
@@ -263,16 +302,18 @@ class FaceArray2 : public Array2<T>
                     _data[_idx(i+T_DIMX,j+T_DIMY)]);
         
     }
-    
-    T bilerp(float x, float y) const
+
+    void bary(float x,
+              float y,
+              size_t & i,
+              size_t & j,
+              float & tx,
+              float & ty) const
     {
         // Scale from world coordinates to index coordinates
         x/= _dx;
         y/= _dx;
-        
-        size_t i,j;
-        float tx,ty;
-     
+
         if (x < 0.5 * T_DIMY) {
             i = 0;
             tx = 0;
@@ -294,14 +335,29 @@ class FaceArray2 : public Array2<T>
             j = floorf(y - 0.5 * T_DIMX);
             ty = y - 0.5 * T_DIMX - j;
         }
-          
-        return Array2<T>::bilerp(i,j,tx,ty);
+    }
+
+    T bilerp(Vec2f pos) const
+    {
+        return bilerp(pos.x, pos.y);
     }
     
-    void resize(size_t nx, size_t ny)
+    T bilerp(float x, float y) const
     {
-        Array2<T>::resize(nx + T_DIMX, ny + T_DIMY);
+        size_t i,j;
+        float tx,ty;
+        bary(x, y, i, j, tx, ty);
+        return Array2<T>::bilerp(i, j, tx, ty);
     }
+    
+    void resize(size_t nx, size_t ny, float dx = 1.0)
+    {
+        Array2<T>::resize(nx + T_DIMX, ny + T_DIMY, dx);
+    }
+
+    size_t nx() const { return _nx - 1 * T_DIMX; }
+    size_t ny() const { return _ny - 1 * T_DIMY; }
+    
   protected:
     // To make it compile in earlier gcc versions.
     // This bug is fixed in 4.7 and forward it seems
@@ -330,6 +386,7 @@ template<typename T>
 class CornerArray2 : public Array2<T>
 {
   public:
+    CornerArray2() {} 
     CornerArray2(size_t nx, size_t ny, float dx)
             : Array2<T>(nx+1,nx+1,dx) {}
 
@@ -345,6 +402,14 @@ class CornerArray2 : public Array2<T>
         } else if (T_CORNER == TOP_RIGHT) {
             return _dx * Vec2<T>(i+1, j+1);
         }
+    }
+
+    T center(size_t i, size_t j) const
+    {
+        return  0.25 * (_data[_idx(i,j)] +
+                        _data[_idx(i+1,j)] +
+                        _data[_idx(i,j+1)] +
+                        _data[_idx(i+1,j+1)]);
     }
     
     template<Corner T_CORNER>
@@ -363,15 +428,17 @@ class CornerArray2 : public Array2<T>
         }
     }
 
-    T bilerp(float x, float y)
+    void bary(float x,
+              float y,
+              size_t & i,
+              size_t & j,
+              float & tx,
+              float & ty) const
     {
         // Scale from world coordinates to index coordinates
         x/= _dx;
         y/= _dx;
-        
-        size_t i,j;
-        float tx,ty;
-     
+            
         if (x < 0) {
             i = 0;
             tx = 0;
@@ -393,14 +460,23 @@ class CornerArray2 : public Array2<T>
             j = floorf(y);
             ty = y - j;
         }
-          
+    }
+
+    T bilerp(float x, float y)
+    {
+        size_t i,j;
+        float tx,ty;
+        bary(x, y, i, j, tx, ty);
         return Array2<T>::bilerp(i,j,tx,ty);
     }
     
-    void resize(size_t nx, size_t ny)
+    void resize(size_t nx, size_t ny, float dx)
     {
-        Array2<T>::resize(nx + 1, ny + 1);
+        Array2<T>::resize(nx + 1, ny + 1, dx);
     }
+
+    size_t nx() const { return _nx - 1; }
+    size_t ny() const { return _ny - 1; }
         
   protected:
     // To make it compile in earlier gcc versions.

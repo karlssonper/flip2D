@@ -1,6 +1,6 @@
 PROJECT(FLIP2D_SRC)
 
-SET(SOURCE flip2D grid particles)
+SET(SOURCE flip2D grid particles sdf)
 
 ADD_LIBRARY(flip2D SHARED ${SOURCE})
 

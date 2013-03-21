@@ -3,14 +3,14 @@
 
 #include "ptr.h"
 #include "vec2.h"
-#include <vector>
+#include "array.h"
 
 class Particles : public SmartPtrInterface<Particles>
 {
   public:
     typedef SmartPtr<Particles> Ptr;
 
-    static Ptr create();
+    static Ptr create() { return new Particles(); }
 
     void addParticle(const Vec2f & pos, Vec2f vel = Vec2f());
     void addParticles(const std::vector<Vec2f> & pos,
@@ -20,8 +20,10 @@ class Particles : public SmartPtrInterface<Particles>
     const Vec2f & pos(int particleIdx) { return _pos[particleIdx]; }
     const Vec2f & vel(int particleIdx) { return _vel[particleIdx]; }
 
-    void advect(float dt);
+    void updateVelocities(const Array2f & u, const Array2f & v);
     
+    void advect(float dt);
+
   protected:
     std::vector<Vec2f> _pos;
     std::vector<Vec2f> _vel;
