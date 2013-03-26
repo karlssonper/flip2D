@@ -18,7 +18,9 @@ class FLIP2D : public SmartPtrInterface<FLIP2D>
 
     void step(float dt);
 
-    bool write(const char * filename);
+    bool write(const char * filename) const;
+
+    static bool read(const char * filename, Settings::Ptr s, Particles::Ptr p);
     
   protected:
     Settings::Ptr _settings;
@@ -32,8 +34,6 @@ class FLIP2D : public SmartPtrInterface<FLIP2D>
     FLIP2D();
     FLIP2D(const FLIP2D &);
     void operator=(const FLIP2D &);
-
-    void _initFluid();
 };
 
 #endif

@@ -15,3 +15,23 @@ INSTALL(TARGETS testSparse DESTINATION bin)
 ADD_EXECUTABLE(testSDF testSDF)
 TARGET_LINK_LIBRARIES(testSDF flip2D)
 INSTALL(TARGETS testSDF DESTINATION bin)
+
+
+IF (APPLE OR UNIX)
+  INCLUDE (${CMAKE_ROOT}/Modules/FindOpenGL.cmake)
+  INCLUDE (${CMAKE_ROOT}/Modules/FindGLUT.cmake)
+ENDIF (APPLE OR UNIX)
+
+#I like to set the GLUT path manually in Windows since the FindGLUT script
+#never works for me. Set ENV VAR 'GLUT_ROOT' to the GLUT root folder (duh!)
+IF (WIN32)
+  SET (GLUT_INCLUDE_DIR $ENV{GLUT_ROOT}/include})
+  LINK_DIRECTORIES($ENV{GLUT_ROOT}/lib})
+  SET (GLUT_LIBRARIES glut32)
+  #SET (GLUT_LIBRARIES freeglut)
+ENDIF (WIN32)
+
+INCLUDE_DIRECTORIES(${OPENGL_INCLUDE_DIR} ${GLUT_INCLUDE_DIR})
+ADD_EXECUTABLE(flip2D-viewer flip2D-viewer)
+TARGET_LINK_LIBRARIES(flip2D-viewer ${OPENGL_LIBRARIES} ${GLUT_LIBRARIES} flip2D)
+INSTALL (TARGETS flip2D-viewer DESTINATION bin)

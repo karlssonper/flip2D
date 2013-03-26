@@ -27,7 +27,11 @@ FLIP2D::FLIP2D(Settings::Ptr s) : _settings(s)
 
     // Init Solid SDF and spawn fluid particles
     _solid->initBoxBoundary(s->solidWidth);
-    _initFluid();
+    _particles->initSphere(_solid->phi(),
+                           _settings->initialFluidCenter,
+                           _settings->initialFluidRadius,
+                           _settings->particlesPerCell,
+                           _settings->initialVelocity);
 }
 
 void FLIP2D::step(float dt)
@@ -46,40 +50,37 @@ void FLIP2D::step(float dt)
         _grid->pressureProjection(_pressureSolver->pressure(), _fluid, t);
         _grid->extrapolateVelocities(_fluid, _settings->numVelSweepIterations);
         _grid->enforceBoundaryConditions(_solid);
+        _particles->advect(_grid->u(), _grid->v(), t);
         _particles->updateVelocities(_grid->u(), _grid->v());
-        _particles->advect(t);
         tStep += t;
     }
 }
 
-bool FLIP2D::write(const char * filename)
+bool FLIP2D::write(const char * filename) const
 {
     std::ofstream out(filename, std::ios::out | std::ios::binary);
     if (out.is_open()) {
+        _settings->write(out);
         _particles->write(out);    
         out.close();
+        return true;
     } else {
         //error
+        return false;
     }
 }
 
-void FLIP2D::_initFluid()
+bool FLIP2D::read(const char * filename, Settings::Ptr s, Particles::Ptr p)
 {
-    const float dx = _fluid->phi().dx();
-    const float r2 = sqr(_settings->initialFluidRadius);
-    for (int i = 0; i < _fluid->phi().nx(); ++i) {
-        for (int j = 0; j < _fluid->phi().ny(); ++j) {
-            for (int n = 0; n < _settings->particlesPerCell; ++n) {
-                const Vec2f offset(random(-0.495, 0.495),random(-0.495, 0.495));
-                const Vec2f pos = _fluid->phi().pos(i,j) + dx * offset;
-                const Vec2f d = pos - _settings->initialFluidCenter;
-
-                // Inside test
-                if (sqr(d.x) + sqr(d.y) - r2 < 0 && !_solid->inside(pos)) {
-                    _particles->addParticle(pos, _settings->initialVelocity);
-                }
-            }
-        }
+    std::ifstream in(filename, std::ios::in | std::ios::binary);
+    if (in.is_open()) {
+        s->read(in);
+        p->read(in);
+        in.close();
+        return true;
+    } else {
+        //error
+        return false;
     }
 }
 
