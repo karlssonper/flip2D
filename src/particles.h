@@ -4,6 +4,7 @@
 #include "ptr.h"
 #include "vec2.h"
 #include "array.h"
+#include <fstream>
 
 class Particles : public SmartPtrInterface<Particles>
 {
@@ -23,6 +24,8 @@ class Particles : public SmartPtrInterface<Particles>
     void updateVelocities(const Array2f & u, const Array2f & v);
     
     void advect(float dt);
+
+    void write(std::ofstream & out);
 
   protected:
     std::vector<Vec2f> _pos;

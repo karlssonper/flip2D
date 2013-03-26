@@ -27,18 +27,25 @@ class SolidSDF : public SmartPtrInterface<SolidSDF>
 
     float center(int i, int j) const { return _phi.center(i,j); }
 
+    bool inside(const Vec2f & pos) const { return _phi.bilerp(pos) < 0; }
+
     void createWeights(FaceArray2Xf & uw, FaceArray2Yf & vw);
+
+    static void createWeights(const CornerArray2f & phi,
+                              FaceArray2Xf & uw,
+                              FaceArray2Yf & vw);
+
+    const CornerArray2f & phi() const { return _phi; } 
     
   protected:
     CornerArray2f _phi;
-
     
     SolidSDF(Settings::Ptr s);
     SolidSDF();
     SolidSDF(const SolidSDF &);
     void operator=(const SolidSDF &);
 
-    float _weight(float phiA, float phiB) const
+    static float _weight(float phiA, float phiB)
     {
         return clamp(1.0f - fractionInside(phiA,phiB), 0.0f, 1.0f);
     }
@@ -58,13 +65,15 @@ class FluidSDF : public SmartPtrInterface<FluidSDF>
     bool isFluid(int i, int j) const { return _phi(i,j) < 0; }
 
     float phi(int i, int j) const { return _phi(i,j); }
-    float & phi(int i, int j) { return _phi(i,j); }
+    const Array2f & phi() const { return _phi; } 
 
     void reconstructSurface(Particles::Ptr particles, float R, float r);
 
     void reinitialize(int numSwepIterations);
 
-    void extrapolateIntoSolid(SolidSDF::Ptr solid); 
+    void extrapolateIntoSolid(SolidSDF::Ptr solid);
+
+    static void extrapolateIntoSolid(const CornerArray2f & solid, Array2f &phi);
     
   protected:
     Array2f _phi;

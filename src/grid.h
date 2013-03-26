@@ -27,7 +27,7 @@ class Grid : public SmartPtrInterface<Grid>
     const FaceArray2Xf & u() const { return _u;}
     const FaceArray2Xf & uWeights() const { return _uWeights;}
     const FaceArray2Yf & v() const { return _v;}
-    const FaceArray2Yf & vWeigts() const { return _vWeights;}
+    const FaceArray2Yf & vWeights() const { return _vWeights;}
     
   protected:
     FaceArray2Xf _u;

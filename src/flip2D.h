@@ -4,6 +4,7 @@
 #include "ptr.h"
 #include "settings.h"
 #include "grid.h"
+#include "pressure.h"
 
 class FLIP2D : public SmartPtrInterface<FLIP2D>
 {
@@ -20,12 +21,19 @@ class FLIP2D : public SmartPtrInterface<FLIP2D>
     bool write(const char * filename);
     
   protected:
+    Settings::Ptr _settings;
     Grid::Ptr _grid;
+    Particles::Ptr _particles;
+    FluidSDF::Ptr _fluid;
+    SolidSDF::Ptr _solid;
+    PressureSolver::Ptr _pressureSolver;
     
     FLIP2D(Settings::Ptr s);
     FLIP2D();
     FLIP2D(const FLIP2D &);
     void operator=(const FLIP2D &);
+
+    void _initFluid();
 };
 
 #endif

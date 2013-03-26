@@ -31,3 +31,12 @@ void Particles::advect(float dt)
         _pos[i] += dt * _vel[i];
     }
 }
+
+void Particles::write(std::ofstream & out)
+{
+    int N = numParticles();
+    int size = sizeof(Vec2f) * N;
+    out.write(reinterpret_cast<const char*>(&N), sizeof(int));
+    out.write(reinterpret_cast<const char*>(&_pos[0]), size);
+    out.write(reinterpret_cast<const char*>(&_vel[0]), size);
+}

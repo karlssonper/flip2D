@@ -257,6 +257,11 @@ class FaceArray2 : public Array2<T>
         assert(T_DIMX || T_DIMY);
     }
 
+    Vec2f pos(size_t i, size_t j) const
+    {
+        return _dx * Vec2<T>(i + 0.5*T_DIMY, j + 0.5*T_DIMX);
+    }
+    
     template<Faces T_FACE>
     Vec2<float> pos(size_t i, size_t j) const
     {
@@ -395,6 +400,11 @@ class CornerArray2 : public Array2<T>
     CornerArray2(size_t nx, size_t ny, float dx)
             : Array2<T>(nx+1,nx+1,dx) {}
 
+    Vec2f pos(size_t i, size_t j) const
+    {
+        return _dx * Vec2<T>(i, j);
+    }
+    
     template<Corner T_CORNER>
     Vec2<float> pos(size_t i, size_t j) const
     {
@@ -419,6 +429,22 @@ class CornerArray2 : public Array2<T>
     
     template<Corner T_CORNER>
     T & corner(size_t i, size_t j)
+    {
+        assert(i < _nx - 1);
+        assert(j < _ny - 1);
+        if (T_CORNER == BOTTOM_LEFT) {
+            return _data[_idx(i,j)];
+        } else if (T_CORNER == BOTTOM_RIGHT) {
+            return _data[_idx(i+1,j)];
+        } else if (T_CORNER == TOP_LEFT) {
+            return _data[_idx(i,j+1)];
+        } else if (T_CORNER == TOP_RIGHT) {
+            return _data[_idx(i+1,j+1)];
+        }
+    }
+
+    template<Corner T_CORNER>
+    T corner(size_t i, size_t j) const
     {
         assert(i < _nx - 1);
         assert(j < _ny - 1);
@@ -467,7 +493,12 @@ class CornerArray2 : public Array2<T>
         }
     }
 
-    T bilerp(float x, float y)
+    T bilerp(const Vec2f & pos) const
+    {
+        return bilerp(pos.x, pos.y);
+    }
+    
+    T bilerp(float x, float y) const
     {
         size_t i,j;
         float tx,ty;

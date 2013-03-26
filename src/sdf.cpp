@@ -7,27 +7,34 @@ SolidSDF::SolidSDF(Settings::Ptr s)
     _phi.resize(s->nx,s->ny,s->dx);
 }
 
-void SolidSDF::createWeights(FaceArray2Xf & uw, FaceArray2Yf & vw)
+void SolidSDF::createWeights(const CornerArray2f & phi,
+                             FaceArray2Xf & uw,
+                             FaceArray2Yf & vw)
 {
     int iEnd = uw.nx() - 1;
     for (int j = 0; j < uw.ny(); ++j) {
         for (int i = 0; i < uw.nx(); ++i) {
-            uw.face<LEFT>(i,j) = _weight(_phi.corner<TOP_LEFT>(i,j),
-                                         _phi.corner<BOTTOM_LEFT>(i,j));
+            uw.face<LEFT>(i,j) = _weight(phi.corner<TOP_LEFT>(i,j),
+                                         phi.corner<BOTTOM_LEFT>(i,j));
         }
-        uw.face<RIGHT>(iEnd,j) = _weight(_phi.corner<TOP_RIGHT>(iEnd,j),
-                                         _phi.corner<BOTTOM_RIGHT>(iEnd,j));
+        uw.face<RIGHT>(iEnd,j) = _weight(phi.corner<TOP_RIGHT>(iEnd,j),
+                                         phi.corner<BOTTOM_RIGHT>(iEnd,j));
     }
         
     int jEnd = vw.ny() - 1;
     for (int i = 0; i < vw.nx(); ++i) {
         for (int j = 0; j < vw.ny(); ++j) {
-            vw.face<BOTTOM>(i,j) = _weight(_phi.corner<BOTTOM_RIGHT>(i,j),
-                                           _phi.corner<BOTTOM_LEFT>(i,j));
+            vw.face<BOTTOM>(i,j) = _weight(phi.corner<BOTTOM_RIGHT>(i,j),
+                                           phi.corner<BOTTOM_LEFT>(i,j));
         }
-        vw.face<TOP>(i,jEnd) = _weight(_phi.corner<TOP_RIGHT>(i,jEnd),
-                                       _phi.corner<TOP_LEFT>(i,jEnd));
+        vw.face<TOP>(i,jEnd) = _weight(phi.corner<TOP_RIGHT>(i,jEnd),
+                                       phi.corner<TOP_LEFT>(i,jEnd));
     }
+}
+
+void SolidSDF::createWeights(FaceArray2Xf & uw, FaceArray2Yf & vw)
+{
+    createWeights(_phi, uw, vw);
 }
 
 void SolidSDF::initBoxBoundary(int width)
@@ -117,13 +124,18 @@ void FluidSDF::_sweep(int i0, int i1, int j0, int j1)
     }
 }
 
-void FluidSDF::extrapolateIntoSolid(SolidSDF::Ptr solid)
+void FluidSDF::extrapolateIntoSolid(const CornerArray2f & solid, Array2f & phi)
 {
-    for (int i = 0; i < _phi.nx(); ++i) {
-        for (int j = 0; j < _phi.ny(); ++j) {
-            if (_phi(i,j) < 0.5 * _phi.dx() && solid->center(i,j) < 0) {
-                _phi(i,j) = -0.5f * _phi.dx();
+    for (int i = 0; i < phi.nx(); ++i) {
+        for (int j = 0; j < phi.ny(); ++j) {
+            if (phi(i,j) < 0.5 * phi.dx() && solid.center(i,j) < 0) {
+                phi(i,j) = -0.5f * phi.dx();
             }
         }
     }
+}
+
+void FluidSDF::extrapolateIntoSolid(SolidSDF::Ptr solid)
+{
+    extrapolateIntoSolid(solid->phi(), _phi);
 }

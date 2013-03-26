@@ -11,11 +11,9 @@ class PCG : public PressureSolver
         return new PCG(s);
     }
 
-    virtual void buildLinearSystem(const FaceArray2Xf & u,
-                                   const FaceArray2Xf & v,
-                                   const FaceArray2Xf & uWeights,
-                                   const FaceArray2Xf & vWeights,
-                                   FluidSDF::Ptr f,
+    virtual void buildLinearSystem(Grid::Ptr grid,
+                                   SolidSDF::Ptr solid,
+                                   FluidSDF::Ptr fluid,
                                    float dt);
 
     virtual void solveLinearSystem(FluidSDF::Ptr f, float dt);

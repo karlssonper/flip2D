@@ -1,7 +1,9 @@
 #include "pcg.h"
 
 PCG::PCG(Settings::Ptr s) :
-        PressureSolver(s), _tol(s->tolerance), _maxIterations(s->maxIterations)
+        PressureSolver(s, PRECONDITIONED_CONJUGATE_GRADIENT),
+        _tol(s->tolerance),
+        _maxIterations(s->maxIterations)
 {
     _z.resize(s->nx,s->ny,s->dx);
     _s.resize(s->nx,s->ny,s->dx);
@@ -9,15 +11,13 @@ PCG::PCG(Settings::Ptr s) :
     _precon.resize(s->nx,s->ny,s->dx);
 }
 
-void PCG::buildLinearSystem(const FaceArray2Xf & u,
-                            const FaceArray2Xf & v,
-                            const FaceArray2Xf & uWeights,
-                            const FaceArray2Xf & vWeights,
-                            FluidSDF::Ptr f,
+void PCG::buildLinearSystem(Grid::Ptr grid,
+                            SolidSDF::Ptr solid,
+                            FluidSDF::Ptr fluid,
                             float dt)
 {
-    PressureSolver::buildLinearSystem(u,v,uWeights,vWeights,f,dt);
-    _buildIncompleteCholeskyPreconditioner(f);
+    PressureSolver::buildLinearSystem(grid, solid, fluid,dt);
+    _buildIncompleteCholeskyPreconditioner(fluid);
 }
 
 void PCG::solveLinearSystem(FluidSDF::Ptr f, float dt)

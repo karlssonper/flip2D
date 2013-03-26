@@ -16,7 +16,14 @@ class Settings : public SmartPtrInterface<Settings>
     int ny;
     float dx;
 
+    // Particles
+    Vec2f initialFluidCenter;
+    float initialFluidRadius;
+    Vec2f initialVelocity;
+    int particlesPerCell;
+    
     // SDF
+    float solidWidth;
     float R;
     float r;
     int numPhiSweepIterations;
@@ -26,8 +33,25 @@ class Settings : public SmartPtrInterface<Settings>
     int numVelSweepIterations;
     
     // PCG
+    bool usePCG;
     float tolerance;
     int maxIterations;
+
+    // Multigrid
+    bool useMultigrid;
+    int numFullCycles;
+    int numVCycles;
+    int numPreSweeps;
+    int numPostSweeps;
+    int nxMin;
+
+    // GaussSeidel;
+    bool useGaussSeidel;
+    int numGaussSeidelIterations;
+
+    // Jacobi
+    bool useJacobi;
+    int numJacobiIterations;
 
   protected:
     Settings() {}

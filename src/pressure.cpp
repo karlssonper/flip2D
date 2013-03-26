@@ -1,57 +1,53 @@
 #include "pressure.h"
 #include "util.h"
 
-PressureSolver::PressureSolver(Settings::Ptr s)
+PressureSolver::PressureSolver(Settings::Ptr s, SolverType type) : _type(type)
 {
-    _pressure.resize(s->nx,s->ny,s->dx);
-    _b.resize(s->nx,s->ny,s->dx);
-    _A.resize(s->nx,s->ny,s->dx);
+  _resize(s->nx,s->ny,s->dx);
 }
 
-void PressureSolver::buildLinearSystem(const FaceArray2Xf & u,
-                                       const FaceArray2Xf & v,
-                                       const FaceArray2Xf & uWeights,
-                                       const FaceArray2Xf & vWeights,
-                                       FluidSDF::Ptr f,
+void PressureSolver::buildLinearSystem(Grid::Ptr grid,
+                                       SolidSDF::Ptr solid,
+                                       FluidSDF::Ptr fluid,
                                        float dt)
 {
-    _buildLaplace(uWeights, vWeights, f, _A, dt);
-    _buildRHS(u, v, uWeights, vWeights, f, _b);
+    _buildLaplace(grid->uWeights(), grid->vWeights(), fluid->phi(), _A, dt);
+    _buildRHS(grid->u(),grid->v(),grid->uWeights(),grid->vWeights(),fluid,_b);
 }
 
 void PressureSolver::_buildLaplace(const FaceArray2Xf & uw,
-                                   const FaceArray2Xf & vw,
-                                   FluidSDF::Ptr f,
+                                   const FaceArray2Yf & vw,
+                                   const Array2f & phi,
                                    SparseLaplacianMatrix<float> & A,
                                    float dt)
 {
     A.reset();
     for (int i = 0; i < _pressure.nx(); ++i) {
         for (int j = 0; j < _pressure.ny(); ++j) {
-            if (f->isFluid(i,j)) {
+            if (phi(i,j) < 0) {
                 if (i > 0) {
                     A.value<CENTER>(i,j) += _laplaceCenter(uw.face<LEFT>(i,j),
-                                                           f->phi(i,j),
-                                                           f->phi(i-1,j));
+                                                           phi(i,j),
+                                                           phi(i-1,j));
                 }
                 if (j > 0) {
                     A.value<CENTER>(i,j) += _laplaceCenter(vw.face<BOTTOM>(i,j),
-                                                           f->phi(i,j),
-                                                           f->phi(i,j-1));
+                                                           phi(i,j),
+                                                           phi(i,j-1));
                 }
 
                 // We only have to do it on two faces because of symmetri.
                 if (i < _pressure.nx() - 1) {
-                    A.value<RIGHT>(i,j) =-uw.face<RIGHT>(i,j)*f->isFluid(i+1,j);
+                    A.value<RIGHT>(i,j) = -uw.face<RIGHT>(i,j)*(phi(i+1,j) < 0);
                     A.value<CENTER>(i,j) += _laplaceCenter(uw.face<RIGHT>(i,j),
-                                                           f->phi(i,j),
-                                                           f->phi(i+1,j));
+                                                           phi(i,j),
+                                                           phi(i+1,j));
                 }
                 if (j < _pressure.ny() - 1) {
-                    A.value<TOP>(i,j) = -vw.face<TOP>(i,j) * f->isFluid(i,j+1);
+                    A.value<TOP>(i,j) = -vw.face<TOP>(i,j) * (phi(i,j+1) < 0);
                     A.value<CENTER>(i,j) += _laplaceCenter(vw.face<TOP>(i,j),
-                                                           f->phi(i,j),
-                                                           f->phi(i,j+1));
+                                                           phi(i,j),
+                                                           phi(i,j+1));
                 }
             }
         }
@@ -74,9 +70,9 @@ float PressureSolver::_laplaceCenter(float w, float phiFluid, float phiAir)
 }
 
 void PressureSolver::_buildRHS(const FaceArray2Xf & u,
-                               const FaceArray2Xf & v,
+                               const FaceArray2Yf & v,
                                const FaceArray2Xf & uw,
-                               const FaceArray2Xf & vw,
+                               const FaceArray2Yf & vw,
                                FluidSDF::Ptr f,
                                Array2f & b)
 {
@@ -92,4 +88,27 @@ void PressureSolver::_buildRHS(const FaceArray2Xf & u,
             }
         }
     }
+}
+
+void PressureSolver::_computeResidual(const Array2f & phi,
+                                      const SparseLaplacianMatrix<float> & A,
+                                      const Array2f & pressure,
+                                      const Array2f & b,
+                                      Array2f & r)
+{
+    r.reset();
+    for (int i = 0; i < pressure.nx(); ++i) {
+        for (int j = 0; j < pressure.ny(); ++j) {
+            if (phi(i,j) < 0) {
+                r(i,j) = b(i,j) - A.mult(pressure,i,j);
+            }
+        }
+    }
+}
+
+void PressureSolver::_resize(int nx, int ny, float dx)
+{
+    _pressure.resize(nx,ny,dx);
+    _b.resize(nx,ny,dx);
+    _A.resize(nx,ny,dx);
 }

@@ -62,11 +62,15 @@ class SparseLaplacianMatrix
 
     T mult(const Array2<T> & input, size_t i, size_t j) const
     {
-        return value<CENTER>(i,j) * input(i,j) +
-                (i > 0 ? value<LEFT>(i,j) * input(i-1,j) : 0) +
-                (i < input.nx()-1 ? value<RIGHT>(i,j) * input(i+1,j) : 0) +
-                (j > 0 ? value<BOTTOM>(i,j) * input(i,j-1) : 0) +
-                (j < input.ny()-1 ? value<TOP>(i,j)* input(i,j+1) : 0);
+        return value<CENTER>(i,j) * input(i,j) + multNeighbors(input,i,j);
+    }
+
+    T multNeighbors(const Array2<T> & input, size_t i, size_t j) const
+    {
+      return (i > 0 ? value<LEFT>(i,j) * input(i-1,j) : 0) +
+             (i < input.nx()-1 ? value<RIGHT>(i,j) * input(i+1,j) : 0) +
+             (j > 0 ? value<BOTTOM>(i,j) * input(i,j-1) : 0) +
+             (j < input.ny()-1 ? value<TOP>(i,j)* input(i,j+1) : 0);   
     }
 
     void multiply(T rhs)
