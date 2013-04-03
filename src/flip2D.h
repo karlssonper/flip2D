@@ -11,10 +11,7 @@ class FLIP2D : public SmartPtrInterface<FLIP2D>
   public:
     typedef SmartPtr<FLIP2D> Ptr;
     
-    static FLIP2D::Ptr create(Settings::Ptr s)
-    {
-        return new FLIP2D(s);
-    }
+    static FLIP2D::Ptr create(Settings::Ptr s) { return new FLIP2D(s); }
 
     void step(float dt);
 
@@ -31,6 +28,8 @@ class FLIP2D : public SmartPtrInterface<FLIP2D>
     PressureSolver::Ptr _pressureSolver;
     
     FLIP2D(Settings::Ptr s);
+    
+  private:
     FLIP2D();
     FLIP2D(const FLIP2D &);
     void operator=(const FLIP2D &);

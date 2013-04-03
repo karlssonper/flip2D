@@ -1,5 +1,6 @@
 #include "grid.h"
 #include "util.h"
+#include "log.h"
 
 Grid::Grid(Settings::Ptr s)
 {
@@ -13,6 +14,7 @@ Grid::Grid(Settings::Ptr s)
 
 void Grid::sampleVelocities(Particles::Ptr p)
 {
+    LOG_OUTPUT("Sampling velocities to grid from particles.");
     _reset();
     size_t i,j;
     float tx,ty;
@@ -28,12 +30,14 @@ void Grid::sampleVelocities(Particles::Ptr p)
 
 void Grid::applyGravity(const Vec2f & g, float dt)
 {
+    LOG_OUTPUT("Applying gravity.");
     _u.add(g.x * dt);
     _v.add(g.y * dt);
 }
 
 float Grid::CFL() const
 {
+    LOG_OUTPUT("Computing CFL condition.");
     float x = sqr(_u.infNorm()) + sqr(_v.infNorm());
     if (x < 1e-16){
         x = 1e-16;
@@ -43,6 +47,7 @@ float Grid::CFL() const
 
 void Grid::extrapolateVelocities(FluidSDF::Ptr f, int numSweepIterations)
 {
+    LOG_OUTPUT("Extrapolating velocities outside the fluid.");
     for (int i = 0; i < numSweepIterations; ++i) {
         _sweep<RIGHT, true>(f, true, true);
         _sweep<RIGHT, true>(f, true, false);
@@ -60,6 +65,7 @@ void Grid::pressureProjection(const Array2f & p,
                               FluidSDF::Ptr f,
                               float dt)
 {
+    LOG_OUTPUT("Pressure projection on to grid velocities.");
     float scale = dt / p.dx();
     float theta;
     _u.reset();
@@ -85,6 +91,7 @@ void Grid::pressureProjection(const Array2f & p,
 
 void Grid::enforceBoundaryConditions(SolidSDF::Ptr s)
 {
+    LOG_OUTPUT("Enforcing boundary conditions on grid velocities.");
     _uSum.reset();
     _vSum.reset();
         

@@ -1,4 +1,5 @@
 #include "sdf.h"
+#include "log.h"
 #include <cassert>
 #include <cmath>
 
@@ -11,6 +12,7 @@ void SolidSDF::createWeights(const CornerArray2f & phi,
                              FaceArray2Xf & uw,
                              FaceArray2Yf & vw)
 {
+    LOG_OUTPUT("Creating solid/fluid weights for velocities.");
     int iEnd = uw.nx() - 1;
     for (int j = 0; j < uw.ny(); ++j) {
         for (int i = 0; i < uw.nx(); ++i) {
@@ -39,6 +41,7 @@ void SolidSDF::createWeights(FaceArray2Xf & uw, FaceArray2Yf & vw)
 
 void SolidSDF::initBoxBoundary(int width)
 {
+    LOG_OUTPUT("Initiating solid SDF with box boundaries.");
     _phi.set(-1.5f + width + 3);
     float x = -1.5f;
     int m = 0;
@@ -66,6 +69,7 @@ FluidSDF::FluidSDF(Settings::Ptr s)
 
 void FluidSDF::reconstructSurface(Particles::Ptr particles, float R, float r)
 {
+    LOG_OUTPUT("Reconstructing fluid surface.");
     assert(R && r);
     _sum.reset();
     _pAvg.reset();
@@ -103,6 +107,8 @@ void FluidSDF::reconstructSurface(Particles::Ptr particles, float R, float r)
 
 void FluidSDF::reinitialize(int numSwepIterations)
 {
+    LOG_OUTPUT("Reinitializing fluid SDF with " << numSwepIterations <<
+               " sweep iterations");
     for (int i = 0; i < numSwepIterations; ++i) {
         _sweep(1,_phi.nx(), 1,_phi.ny());
         _sweep(_phi.nx() - 2, -1,_phi.ny() - 2, -1);
@@ -126,6 +132,7 @@ void FluidSDF::_sweep(int i0, int i1, int j0, int j1)
 
 void FluidSDF::extrapolateIntoSolid(const CornerArray2f & solid, Array2f & phi)
 {
+    LOG_OUTPUT("Extrapolating fluid surface into solid.");
     for (int i = 0; i < phi.nx(); ++i) {
         for (int j = 0; j < phi.ny(); ++j) {
             if (phi(i,j) < 0.5 * phi.dx() && solid.center(i,j) < 0) {

@@ -1,4 +1,5 @@
 #include "pcg.h"
+#include "log.h"
 
 PCG::PCG(Settings::Ptr s) :
         PressureSolver(s, PRECONDITIONED_CONJUGATE_GRADIENT),
@@ -22,6 +23,7 @@ void PCG::buildLinearSystem(Grid::Ptr grid,
 
 void PCG::solveLinearSystem(FluidSDF::Ptr f, float dt)
 {
+    LOG_OUTPUT("Solving the linear system with PCG.");
     float tol = _tol * _b.infNorm();
     _pressure.reset();
     if (_b.infNorm() == 0) {
@@ -42,8 +44,8 @@ void PCG::solveLinearSystem(FluidSDF::Ptr f, float dt)
         _pressure.add(_s, alpha);
         _b.add(_z, -alpha);
         if (_b.infNorm() <= tol) {
-            std::cout << "Pressure converged, |r| =  " << _b.infNorm() 
-                      << " in " << iter << " iterations." << std::endl;
+            LOG_OUTPUT("PCG converged in " << iter << " iterations.");
+            LOG_OUTPUT("The residual norm |r| = " << _b.infNorm() << ".");
             return;
         }
         _applyPreconditioner(f);
@@ -52,8 +54,8 @@ void PCG::solveLinearSystem(FluidSDF::Ptr f, float dt)
         _s.scaleAndAdd(beta, _z);
         rho = rhoNew;
     }
-    std::cout << "Didn't converge in PCG solver, tol = " << tol 
-              << ", |r|= " << _b.infNorm() << "." << std::endl;
+    LOG_OUTPUT("PCG did not converge with tolerance = " << tol << ".");
+    LOG_OUTPUT("The residual norm |r| = " << _b.infNorm() << ".");
 }
 
 void PCG::_applyPreconditioner(FluidSDF::Ptr f)

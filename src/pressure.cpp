@@ -1,5 +1,6 @@
 #include "pressure.h"
 #include "util.h"
+#include "log.h"
 
 PressureSolver::PressureSolver(Settings::Ptr s, SolverType type) : _type(type)
 {
@@ -11,6 +12,7 @@ void PressureSolver::buildLinearSystem(Grid::Ptr grid,
                                        FluidSDF::Ptr fluid,
                                        float dt)
 {
+    LOG_OUTPUT("Building the linear system for the pressure equation.");
     _buildLaplace(grid->uWeights(), grid->vWeights(), fluid->phi(), _A, dt);
     _buildRHS(grid->u(),grid->v(),grid->uWeights(),grid->vWeights(),fluid,_b);
 }

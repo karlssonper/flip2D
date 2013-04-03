@@ -5,15 +5,35 @@
 #include "../src/flip2D.h"
 
 #include <iostream>
+#include <string>
+#include <sstream>
 
 Settings::Ptr settings;
-Particles::Ptr particles;
+
+int frame = 0;
+std::string simfile;
+
+void filename(std::string & input, int frame)
+{
+    size_t pos = simfile.find("$F");
+    if (pos != std::string::npos) {
+        std::stringstream ss;
+        ss << frame;
+        input.replace(pos,2, ss.str());
+    }
+}
 
 void display()
 {
     glClear(GL_COLOR_BUFFER_BIT);
     glLoadIdentity();
 
+    //Read frame
+    std::string simfileFrame = simfile;
+    filename(simfileFrame,frame);
+    Particles::Ptr particles = Particles::create();
+    FLIP2D::read(simfileFrame.c_str(), settings, particles);
+    
     glColor3f(1.0, 1.0, 1.0);
     glBegin(GL_POINTS);
     for (int i = 0; i < particles->numParticles(); ++i) {
@@ -27,7 +47,9 @@ void display()
 void keyboard(unsigned char key, int x, int y)
 {
     switch (key) {
-
+        case 's':
+            ++frame;
+            break;
     }
 }
 
@@ -50,9 +72,12 @@ int main(int argc, char **argv)
                   << std::endl;
         exit(0);
     } else {
+        simfile = std::string(argv[1]);
+        std::string simfileFirst = simfile;
+        filename(simfileFirst,0);
         settings = Settings::create();
-        particles = Particles::create();
-        FLIP2D::read(argv[1], settings, particles);
+        Particles::Ptr particles = Particles::create();
+        FLIP2D::read(simfileFirst.c_str(), settings, particles);
     }
     
     glutInit(&argc, argv);

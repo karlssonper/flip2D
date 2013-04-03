@@ -1,5 +1,6 @@
 #include "particles.h"
 #include "util.h"
+#include "log.h"
 
 Particles::Particles()
 {
@@ -12,6 +13,7 @@ void Particles::initSphere(const Array2f & solidPhi,
                            int particlesPerCell,
                            Vec2f vel)
 {
+    LOG_OUTPUT("Initating the fluid as a sphere at " << vel);
     const float r2 = sqr(radius);
     for (int i = 0; i < solidPhi.nx(); ++i) {
         for (int j = 0; j < solidPhi.ny(); ++j) {
@@ -44,6 +46,7 @@ void Particles::addParticles(const std::vector<Vec2f> & pos,
 
 void Particles::updateVelocities(const FaceArray2Xf & u, const FaceArray2Yf & v)
 {
+    LOG_OUTPUT("Updating particle velocities from grid.");
     for(int i = 0; i < _pos.size(); ++i) {
         _vel[i] = Vec2f(u.bilerp(_pos[i]), v.bilerp(_pos[i]));
     }
@@ -51,6 +54,7 @@ void Particles::updateVelocities(const FaceArray2Xf & u, const FaceArray2Yf & v)
 
 void Particles::advect(const FaceArray2Xf & u, const FaceArray2Yf & v, float dt)
 {
+    LOG_OUTPUT("Advecting particles position in the grid velocity field");
     Vec2f mid;
     for(int i = 0; i < _pos.size(); ++i) {
         mid = _pos[i] + 0.5f * dt * Vec2f(u.bilerp(_pos[i]),v.bilerp(_pos[i]));

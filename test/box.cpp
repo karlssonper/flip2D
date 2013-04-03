@@ -1,5 +1,30 @@
-#include <iostream>
 #include "../src/flip2D.h"
+#include "../src/log.h"
+
+#include <iostream>
+#include <sstream>
+
+void filename(std::string & input, int frame)
+{
+    size_t pos = input.find("$F");
+    if (pos != std::string::npos) {
+        std::stringstream ss;
+        ss << frame;
+        input.replace(pos,2, ss.str());
+    }
+}
+
+std::string frame(int i)
+{
+    std::stringstream ss;
+    ss << std::endl
+       << "-------------------------------------------------------------------"
+       << std::endl
+       << "                              Frame " << i
+       << std::endl
+       << "-------------------------------------------------------------------";
+    return ss.str();
+}
 
 int main(int argc, char *argv[]) {
     std::cout << "<<< Box Test >>>" << std::endl;
@@ -23,6 +48,18 @@ int main(int argc, char *argv[]) {
 
     FLIP2D::Ptr flip = FLIP2D::create(s);
     flip->write("test.flip2D");
-    flip->step(5/24.0);
-    flip->write("step.flip2D");
+    std::string simOutput;
+    if (argc > 1) {
+        simOutput = argv[1];
+    } else {
+        simOutput = "sim/boxSim.$F.flip2D";
+    }
+    int nFrames = 24;
+    for(int i = 0; i < nFrames; ++i) {
+        LOG_OUTPUT_WITHOUT_TIMESTAMPS(frame(i));
+        flip->step(1.0/24.0);
+        std::string simOutputFrame = simOutput;
+        filename(simOutputFrame,i);
+        flip->write(simOutputFrame.c_str());
+    }
 }
